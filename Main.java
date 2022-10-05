@@ -2,66 +2,71 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        //создавать объект
-        Account Liza = new Account();
-        Producer producer = new Producer(Liza);
-        Consumer consumer = new Consumer(Liza);
-        //запускать потоки с объектом
+        Account liza = new Account();
+        Producer producer = new Producer(liza);
+        Consumer consumer = new Consumer(liza);
         new Thread(producer).start();
         new Thread(consumer).start();
     }
 }
-class Account{
-    double balance = 0;
-    void setbalance(){
-         while (balance<100){
-             try {
-                 wait();
-                 balance = balance - 100;
-                 System.out.println("На счету у вас: " + balance);
-             } catch (InterruptedException e) {
-                 throw new RuntimeException(e);
-             }
-             notify();
-         }
+class Account extends Thread{
+    private int balance = 0;
+    int minus = 0;
+    int plus = 0;
+    public synchronized void setBalance(){
+        while(balance >= 400){
+            try{
+                wait();
+            }
+            catch (Exception ex){
+                ex.getMessage();
+            }
+        }
+        System.out.println("Сколько денег вы хотите положить?");
+        Scanner in = new Scanner(System.in);
+        plus = in.nextInt();
+        balance += plus;
+        System.out.println("Остаток баланcа: " + balance);
+        notify();
     }
-    void getbalance(){
-        while (balance>=100){
+    public synchronized void getMoney(){
+        while(balance < 400){
             try {
                 wait();
-                Scanner money = new Scanner(System.in);
-                System.out.println("Сколько денег вы положили?");
-                int getmoney = money.nextInt();
-                balance = balance + getmoney;
-                System.out.println("На счету у вас: " + balance);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
             }
-            notify();
+            catch (Exception ex){
+                ex.getMessage();
+            }
+        }
+        System.out.println("Мама забирает у вас деньги: 400 рублей");
+        int mother = 400;
+        int balance2 = balance - mother;
+        balance = balance2;
+        System.out.println("Остаток баланса: " + balance);
+        notify();
+    }
+}
+
+class Producer extends Thread{
+    Account account;
+    Producer(Account account){
+        this.account=account;
+    }
+    public void run(){
+        for (int i = 1; i < 50; i++) {
+            account.setBalance();
         }
     }
 }
-class Consumer implements Runnable{
+class Consumer extends Thread{
 
-    Account store;
-    Consumer(Account store){
-        this.store=store;
+    Account account;
+    Consumer(Account account){
+        this.account=account;
     }
     public void run(){
-        for (int i = 1; i < 6; i++) {
-            store.getbalance();
-        }
-    }
-}
-class Producer implements Runnable{
-
-    Account store;
-    Producer(Account store){
-        this.store=store;
-    }
-    public void run(){
-        for (int i = 1; i < 6; i++) {
-            store.setbalance();
+        for (int i = 1; i < 50; i++) {
+            account.getMoney();
         }
     }
 }
